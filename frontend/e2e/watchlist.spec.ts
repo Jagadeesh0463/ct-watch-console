@@ -48,7 +48,7 @@ test.describe("watchlist", () => {
     expect(count).toBeGreaterThan(0);
 
     for (let i = 0; i < count; i++) {
-      await expect(rows.nth(i).locator(".severity-pill")).toHaveText("critical");
+      await expect(rows.nth(i)).toContainText("Critical");
     }
   });
 
@@ -60,8 +60,8 @@ test.describe("watchlist", () => {
     const detail = page.getByTestId("certificate-detail");
     await expect(detail).toBeVisible();
     await expect(detail).toContainText("expired.example.com");
-    await expect(detail).toContainText("expired"); // expiry_status
-    await expect(detail).toContainText("Chain valid");
+    await expect(detail).toContainText("Critical"); // computed status badge for an expired cert
+    await expect(detail).toContainText("Chain Valid");
   });
 
   test("switching between certificates in a multi-cert domain updates the detail view", async ({

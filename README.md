@@ -32,9 +32,10 @@ issuer/subject chains, and compares SPKI pins. `backend/certs/policy.py` turns t
 normalized records into policy findings with severity (critical/warning), and
 `backend/app.py` + `backend/api/routes.py` serve everything over a Flask REST API,
 parsing fixtures once at startup and caching the results in memory. `frontend/` is a
-Vite + React dashboard (domain watchlist with search/severity filters, a critical
-findings banner, and a certificate detail view) that talks to that API. `docker-compose.yml`
-brings both services up with one command.
+Vite + React dashboard styled with Tailwind CSS and lucide-react icons (summary stat
+cards, a domain watchlist with search/severity filters, a critical findings banner,
+and a grouped certificate detail view with copy-to-clipboard fingerprints) that talks
+to that API. `docker-compose.yml` brings both services up with one command.
 
 For local development and testing, the project includes a deterministic fixture
 generator (`backend/fixtures/generate_fixtures.py`) that produces representative
@@ -75,10 +76,13 @@ once, then `npm run test:e2e`, on a normal machine or in CI to execute it.
   consistent 500 rather than crashing the app
 
 **Milestone 3 — React dashboard + Docker**
-- Domain watchlist with live search and a severity filter (critical / warning / OK)
-- Findings banner highlighting critical issues, with an explicit "all clear" state
-- Certificate detail view, switchable across every certificate in a domain's chain
-  (leaf / intermediate / root)
+- Dark, Tailwind CSS-styled dashboard with summary stat cards (total domains,
+  critical / warning / healthy counts) and lucide-react icons throughout
+- Domain watchlist with live search and a severity filter (critical / warning / healthy)
+- Collapsible findings banner highlighting critical issues, with an explicit "all clear" state
+- Certificate detail view grouped into Certificate / Validity / Security Checks /
+  Fingerprints sections, switchable across every certificate in a domain's chain
+  (leaf / intermediate / root), with copy-to-clipboard on fingerprint hashes
 - `docker-compose.yml`: two services (`backend`, `frontend`), fixtures mounted
   read-only, backend healthcheck via `/healthz`, all config via environment variables
 
@@ -118,10 +122,14 @@ ct-watch-console/
     ├── src/
     │   ├── App.jsx              # top-level layout + data fetching
     │   ├── api.js                 # Flask API client
+    │   ├── index.css               # Tailwind entrypoint + base styles
     │   └── components/
-    │       ├── DomainList.jsx       # search + severity filter
-    │       ├── FindingsBanner.jsx    # critical findings highlight
-    │       └── CertificateDetail.jsx  # per-certificate field view
+    │       ├── StatCard.jsx          # summary KPI cards (domains/critical/warning/healthy)
+    │       ├── DomainList.jsx         # search + severity filter
+    │       ├── FindingsBanner.jsx      # critical findings highlight
+    │       └── CertificateDetail.jsx    # grouped per-certificate field view
+    ├── tailwind.config.js       # dark theme color tokens
+    ├── postcss.config.js
     ├── e2e/watchlist.spec.ts      # Playwright
     └── playwright.config.ts
 ```
