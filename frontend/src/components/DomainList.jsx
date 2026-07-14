@@ -27,11 +27,13 @@ export default function DomainList({
         <input
           type="text"
           placeholder="Search domains..."
+          aria-label="Search domains"
           value={search}
           onChange={(e) => onSearchChange(e.target.value)}
           data-testid="domain-search"
         />
         <select
+          aria-label="Filter by severity"
           value={severityFilter}
           onChange={(e) => onSeverityFilterChange(e.target.value)}
           data-testid="severity-filter"

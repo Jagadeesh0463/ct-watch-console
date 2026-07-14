@@ -68,7 +68,7 @@ def _spki_sha256(cert: x509.Certificate) -> str:
 
 def build() -> dict:
     domains = []
-    T = REFERENCE_TIME
+    now = REFERENCE_TIME
 
     # 1. Fully valid chain: root -> intermediate -> leaf, pin configured and matching.
     root_key = _make_key()
@@ -77,8 +77,8 @@ def build() -> dict:
         "Root CA 1",
         root_key,
         root_key,
-        T - timedelta(days=3650),
-        T + timedelta(days=3650),
+        now - timedelta(days=3650),
+        now + timedelta(days=3650),
         is_ca=True,
     )
     inter_key = _make_key()
@@ -87,8 +87,8 @@ def build() -> dict:
         "Root CA 1",
         root_key,
         inter_key,
-        T - timedelta(days=365),
-        T + timedelta(days=365),
+        now - timedelta(days=365),
+        now + timedelta(days=365),
         is_ca=True,
     )
     leaf_key = _make_key()
@@ -97,8 +97,8 @@ def build() -> dict:
         "Intermediate CA 1",
         inter_key,
         leaf_key,
-        T - timedelta(days=10),
-        T + timedelta(days=300),
+        now - timedelta(days=10),
+        now + timedelta(days=300),
         sans=["valid.example.com"],
     )
     domains.append(
@@ -120,8 +120,8 @@ def build() -> dict:
         "Root CA 1",
         root_key,
         leaf2_key,
-        T - timedelta(days=400),
-        T - timedelta(days=30),
+        now - timedelta(days=400),
+        now - timedelta(days=30),
         sans=["expired.example.com"],
     )
     domains.append(
@@ -141,8 +141,8 @@ def build() -> dict:
         "Root CA 1",
         root_key,
         leaf3_key,
-        T - timedelta(days=60),
-        T + timedelta(days=10),
+        now - timedelta(days=60),
+        now + timedelta(days=10),
         sans=["expiring-soon.example.com"],
     )
     domains.append(
@@ -162,8 +162,8 @@ def build() -> dict:
         "Root CA 1",
         root_key,
         leaf4_key,
-        T - timedelta(days=10),
-        T + timedelta(days=300),
+        now - timedelta(days=10),
+        now + timedelta(days=300),
         sans=["other-name.example.com"],
     )
     domains.append(
@@ -183,8 +183,8 @@ def build() -> dict:
         "Root CA 1",
         root_key,
         leaf5_key,
-        T - timedelta(days=10),
-        T + timedelta(days=300),
+        now - timedelta(days=10),
+        now + timedelta(days=300),
         sans=["*.wildcard.example.com"],
     )
     domains.append(
@@ -206,8 +206,8 @@ def build() -> dict:
         "Intermediate CA Orphan",
         orphan_inter_key,
         leaf6_key,
-        T - timedelta(days=10),
-        T + timedelta(days=300),
+        now - timedelta(days=10),
+        now + timedelta(days=300),
         sans=["broken-chain.example.com"],
     )
     domains.append(
@@ -227,8 +227,8 @@ def build() -> dict:
         "Root CA 1",
         root_key,
         leaf7_key,
-        T - timedelta(days=10),
-        T + timedelta(days=300),
+        now - timedelta(days=10),
+        now + timedelta(days=300),
         sans=["pin-mismatch.example.com"],
     )
     domains.append(
@@ -262,8 +262,8 @@ def build() -> dict:
         "selfsigned.example.com",
         selfsigned_key,
         selfsigned_key,
-        T - timedelta(days=10),
-        T + timedelta(days=300),
+        now - timedelta(days=10),
+        now + timedelta(days=300),
         sans=["selfsigned.example.com"],
     )
     domains.append(
