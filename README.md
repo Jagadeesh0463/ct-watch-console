@@ -1,5 +1,6 @@
 # Certificate Transparency Watch Console
 
+![CI](https://github.com/Jagadeesh0463/ct-watch-console/actions/workflows/ci.yml/badge.svg)
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue)
 ![Flask](https://img.shields.io/badge/Flask-3.x-black)
 ![React](https://img.shields.io/badge/React-18-61DAFB)
@@ -7,6 +8,7 @@
 ![Coverage](https://img.shields.io/badge/Coverage-99%25-success)
 ![Lint](https://img.shields.io/badge/ruff%20%7C%20black%20%7C%20mypy-clean-success)
 ![Docker](https://img.shields.io/badge/Docker%20Compose-ready-2496ED)
+![License](https://img.shields.io/badge/License-MIT-yellow.svg)
 
 A console that ingests CT-style certificate fixtures, normalizes each certificate into a
 structured record, evaluates it against policy rules (expiry, hostname match, chain
@@ -43,14 +45,17 @@ certificate scenarios — valid, expired, expiring-soon, hostname mismatch, wild
 match, broken chain, pin mismatch, malformed entry, and self-signed-root-only chain —
 until the provided assessment fixtures are available.
 
-**Note on the Playwright suite:** `frontend/e2e/watchlist.spec.ts` is written to cover
-all three Milestone 3 UI acceptance criteria (domain filter narrows the list, critical
-findings are visually highlighted, the detail view shows correct certificate fields) and
-is wired into `playwright.config.ts` to boot both the Flask backend and the built
-frontend automatically. It has **not** been executed in this environment — the sandbox
-used to build this had no `sudo` access to install Chromium's system dependencies, so
-the browser binary couldn't be installed here. Run `npx playwright install --with-deps`
-once, then `npm run test:e2e`, on a normal machine or in CI to execute it.
+**Note on the Playwright suite:** `frontend/e2e/watchlist.spec.ts` covers all three
+Milestone 3 UI acceptance criteria (domain filter narrows the list, critical findings
+are visually highlighted, the detail view shows correct certificate fields) and is
+wired into `playwright.config.ts` to boot both the Flask backend and the built frontend
+automatically. It runs on every push via `.github/workflows/ci.yml` — see the CI badge
+above, or the [Actions tab](https://github.com/Jagadeesh0463/ct-watch-console/actions)
+for the current run. It was developed in a sandboxed environment without `sudo` access
+to install Chromium's system dependencies, so it could only be verified by hand against
+the live API and DOM there; CI (a full Ubuntu runner) is what actually executes it in a
+real browser. To run it yourself: `npx playwright install --with-deps` once, then
+`npm run test:e2e`.
 
 ## Features
 
@@ -188,3 +193,14 @@ npm run build     # production build to dist/
 # `npx playwright install --with-deps` on a machine that allows it):
 npm run test:e2e
 ```
+
+## CI
+
+`.github/workflows/ci.yml` runs on every push and pull request to `main`: backend
+lint/type-check/tests (ruff, black, mypy, pytest), a frontend production build, and the
+full Playwright suite against a real Chromium browser. See the CI badge at the top of
+this file or the [Actions tab](https://github.com/Jagadeesh0463/ct-watch-console/actions).
+
+## License
+
+[MIT](LICENSE)
