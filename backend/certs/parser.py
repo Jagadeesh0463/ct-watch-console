@@ -40,6 +40,26 @@ def name_to_str(name: x509.Name) -> str:
     return name.rfc4514_string()
 
 
+def is_ca_certificate(cert: x509.Certificate) -> bool:
+    """True if the cert's BasicConstraints marks it as a CA (root/intermediate).
+
+    Hostname and SPKI-pin policy only make sense for the end-entity (leaf)
+    certificate that actually terminates at the watched domain -- checking an
+    intermediate or root against the domain's hostname/pin produces false
+    findings, since CA certs generally carry neither a matching SAN nor the
+    pinned key. Absence of the extension is treated as "not a CA" (leaf),
+    matching how a real end-entity cert is typically issued.
+    """
+    try:
+        ext = cert.extensions.get_extension_for_oid(x509.oid.ExtensionOID.BASIC_CONSTRAINTS)
+        value = ext.value
+        if isinstance(value, x509.BasicConstraints):
+            return value.ca
+        return False
+    except x509.ExtensionNotFound:
+        return False
+
+
 def compute_expiry_status(
     not_before: datetime,
     not_after: datetime,

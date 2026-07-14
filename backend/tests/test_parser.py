@@ -15,6 +15,7 @@ from certs.parser import (
     CertificateParseError,
     compute_expiry_status,
     fingerprints,
+    is_ca_certificate,
     name_to_str,
     parse_pem,
     spki_sha256,
@@ -84,3 +85,35 @@ def test_compute_expiry_status(delta_before, delta_after, warning_days, expected
 def test_compute_expiry_status_requires_aware_reference():
     with pytest.raises(ValueError):
         compute_expiry_status(datetime(2020, 1, 1), datetime(2030, 1, 1), datetime(2026, 7, 14), 30)
+
+
+def _cert_with_basic_constraints(ca: bool | None):
+    now = datetime.now(timezone.utc)
+    key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+    name = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, "bc-test.example.com")])
+    builder = (
+        x509.CertificateBuilder()
+        .subject_name(name)
+        .issuer_name(name)
+        .public_key(key.public_key())
+        .serial_number(x509.random_serial_number())
+        .not_valid_before(now - timedelta(days=1))
+        .not_valid_after(now + timedelta(days=1))
+    )
+    if ca is not None:
+        builder = builder.add_extension(
+            x509.BasicConstraints(ca=ca, path_length=None), critical=True
+        )
+    return builder.sign(key, hashes.SHA256())
+
+
+def test_is_ca_certificate_true_when_basic_constraints_ca_true():
+    assert is_ca_certificate(_cert_with_basic_constraints(ca=True)) is True
+
+
+def test_is_ca_certificate_false_when_basic_constraints_ca_false():
+    assert is_ca_certificate(_cert_with_basic_constraints(ca=False)) is False
+
+
+def test_is_ca_certificate_false_when_extension_absent():
+    assert is_ca_certificate(_cert_with_basic_constraints(ca=None)) is False

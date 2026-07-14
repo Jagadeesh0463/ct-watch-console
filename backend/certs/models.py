@@ -45,3 +45,26 @@ class ParseError:
     domain: str | None
     fixture_id: str | None
     reason: str
+
+
+class Severity(str, Enum):
+    CRITICAL = "critical"
+    WARNING = "warning"
+    INFO = "info"
+
+
+class Rule(str, Enum):
+    EXPIRED = "expired"
+    EXPIRING_SOON = "expiring_soon"
+    HOSTNAME_MISMATCH = "hostname_mismatch"
+    CHAIN_BROKEN = "chain_broken"
+    PIN_MISMATCH = "pin_mismatch"
+
+
+@dataclass
+class PolicyFinding:
+    domain: str | None
+    certificate_id: str
+    rule: Rule
+    severity: Severity
+    message: str

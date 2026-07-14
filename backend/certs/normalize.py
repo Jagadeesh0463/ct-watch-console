@@ -30,6 +30,7 @@ from .parser import (
     CertificateParseError,
     compute_expiry_status,
     fingerprints,
+    is_ca_certificate,
     name_to_str,
     parse_pem,
 )
@@ -78,6 +79,11 @@ def build_certificate_records(
             hostnames = extract_hostnames(cert)
             not_before = cert.not_valid_before_utc
             not_after = cert.not_valid_after_utc
+            # Hostname and pin policy apply to the end-entity (leaf) cert only --
+            # an intermediate/root has no reason to match the watched domain's
+            # hostname or pinned key, so evaluating them against it would just
+            # produce false findings. See parser.is_ca_certificate.
+            is_ca = is_ca_certificate(cert)
             records.append(
                 CertificateRecord(
                     id=cert_id,
@@ -92,9 +98,13 @@ def build_certificate_records(
                         not_before, not_after, reference_time, warning_days
                     ),
                     hostnames=hostnames,
-                    hostname_match=hostname_matches(domain, hostnames) if domain else False,
+                    hostname_match=(
+                        True
+                        if is_ca
+                        else (hostname_matches(domain, hostnames) if domain else False)
+                    ),
                     chain_valid=validate_chain(cert, pool),
-                    spki_pin_match=pin_match(cert, expected_pins),
+                    spki_pin_match=None if is_ca else pin_match(cert, expected_pins),
                 )
             )
 

@@ -35,7 +35,9 @@ def _name(cn: str) -> x509.Name:
     return x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, cn)])
 
 
-def _build_cert(subject_cn, issuer_cn, signing_key, subject_key, not_before, not_after, sans=None):
+def _build_cert(
+    subject_cn, issuer_cn, signing_key, subject_key, not_before, not_after, sans=None, is_ca=False
+):
     builder = (
         x509.CertificateBuilder()
         .subject_name(_name(subject_cn))
@@ -44,6 +46,7 @@ def _build_cert(subject_cn, issuer_cn, signing_key, subject_key, not_before, not
         .serial_number(x509.random_serial_number())
         .not_valid_before(not_before)
         .not_valid_after(not_after)
+        .add_extension(x509.BasicConstraints(ca=is_ca, path_length=None), critical=True)
     )
     if sans:
         builder = builder.add_extension(
@@ -76,6 +79,7 @@ def build() -> dict:
         root_key,
         T - timedelta(days=3650),
         T + timedelta(days=3650),
+        is_ca=True,
     )
     inter_key = _make_key()
     inter = _build_cert(
@@ -85,6 +89,7 @@ def build() -> dict:
         inter_key,
         T - timedelta(days=365),
         T + timedelta(days=365),
+        is_ca=True,
     )
     leaf_key = _make_key()
     leaf = _build_cert(

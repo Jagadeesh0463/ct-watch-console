@@ -29,3 +29,21 @@ def warning_days() -> int:
 @pytest.fixture(scope="session")
 def fixture_dir() -> Path:
     return FIXTURE_DIR
+
+
+@pytest.fixture()
+def app(reference_time, warning_days):
+    from app import create_app
+    from config import Config
+
+    config = Config(
+        fixture_dir=str(FIXTURE_DIR),
+        expiry_warning_days=warning_days,
+        reference_time=reference_time,
+    )
+    return create_app(config)
+
+
+@pytest.fixture()
+def client(app):
+    return app.test_client()

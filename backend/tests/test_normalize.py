@@ -60,6 +60,21 @@ def test_self_signed_root_only_chain_valid(fixture_dir, reference_time, warning_
     assert _by_id(records, "selfsigned-leaf").chain_valid is True
 
 
+def test_ca_certs_are_exempt_from_hostname_and_pin_checks(
+    fixture_dir, reference_time, warning_days
+):
+    # Intermediate/root certs share a domain block with the leaf they signed,
+    # but their own subject (e.g. "Root CA 1") never matches the watched
+    # domain and their SPKI is never the pinned leaf key -- they must not be
+    # penalized for either, or every domain with a CA chain would show
+    # spurious hostname/pin findings caused only by its root and intermediate.
+    records, _ = build_certificate_records(str(fixture_dir), reference_time, warning_days)
+    for cert_id in ("valid-root", "valid-intermediate"):
+        record = _by_id(records, cert_id)
+        assert record.hostname_match is True
+        assert record.spki_pin_match is None
+
+
 def test_malformed_entry_produces_parse_error_not_record(fixture_dir, reference_time, warning_days):
     records, errors = build_certificate_records(str(fixture_dir), reference_time, warning_days)
     assert not any(r.id == "malformed-cert" for r in records)
