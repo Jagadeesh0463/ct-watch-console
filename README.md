@@ -14,6 +14,11 @@ A console that ingests CT-style certificate fixtures, normalizes each certificat
 structured record, evaluates it against policy rules (expiry, hostname match, chain
 integrity, SPKI pin), and exposes the results through a Flask API and a React dashboard.
 
+**At a glance:** X.509 certificate parsing (fingerprints, expiry, hostname, chain, SPKI
+pin) &middot; stateless policy engine &middot; Flask REST API &middot; React + Tailwind
+dashboard &middot; Docker Compose &middot; 75 backend tests at 99% coverage &middot;
+CI (ruff/black/mypy/pytest/Playwright) on every push. Details below.
+
 ## Roadmap
 
 ```
@@ -94,7 +99,8 @@ real browser. To run it yourself: `npx playwright install --with-deps` once, the
 **Testing**
 - 75 backend tests (unit + API contract), 99% coverage across `certs/`, `api/`,
   `app.py`, `config.py`, clean under ruff/black/mypy
-- Playwright e2e suite written for all 3 UI acceptance criteria (not yet run — see note above)
+- Playwright e2e suite covering all 3 UI acceptance criteria, executed in CI on every
+  push against a real Chromium browser (see the CI badge, or `## CI` below)
 
 ## Repository layout
 
@@ -141,20 +147,18 @@ ct-watch-console/
 
 ## Architecture
 
-```
-CT-style JSON fixtures
-        │
-        ▼
-Certificate Parser   (done — Milestone 1)
-        │
-        ▼
-Policy Engine        (done — Milestone 2)
-        │
-        ▼
-Flask REST API        (done — Milestone 2)
-        │
-        ▼
-React Dashboard        (done — Milestone 3)
+```mermaid
+flowchart TD
+    A["CT-style JSON fixtures"] --> B["Certificate Parser<br/>(Milestone 1)"]
+    B --> C["Policy Engine<br/>(Milestone 2)"]
+    C --> D["Flask REST API<br/>(Milestone 2)"]
+    D --> E["React Dashboard<br/>(Milestone 3)"]
+
+    style A fill:#1f2937,stroke:#3b82f6,color:#e2e8f0
+    style B fill:#1f2937,stroke:#22c55e,color:#e2e8f0
+    style C fill:#1f2937,stroke:#22c55e,color:#e2e8f0
+    style D fill:#1f2937,stroke:#22c55e,color:#e2e8f0
+    style E fill:#1f2937,stroke:#22c55e,color:#e2e8f0
 ```
 
 ## Run everything with Docker Compose
