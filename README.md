@@ -2,35 +2,39 @@
 
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue)
 ![Flask](https://img.shields.io/badge/Flask-3.x-black)
-![Tests](https://img.shields.io/badge/Tests-75_passing-success)
+![React](https://img.shields.io/badge/React-18-61DAFB)
+![Backend Tests](https://img.shields.io/badge/Backend_tests-75_passing-success)
 ![Coverage](https://img.shields.io/badge/Coverage-99%25-success)
 ![Lint](https://img.shields.io/badge/ruff%20%7C%20black%20%7C%20mypy-clean-success)
+![Docker](https://img.shields.io/badge/Docker%20Compose-ready-2496ED)
 
 A console that ingests CT-style certificate fixtures, normalizes each certificate into a
 structured record, evaluates it against policy rules (expiry, hostname match, chain
-integrity, SPKI pin), and exposes the results through a Flask API — with a React
-dashboard on the way.
+integrity, SPKI pin), and exposes the results through a Flask API and a React dashboard.
 
 ## Roadmap
 
 ```
-████████████░░░░░░ Milestone 2 of 3
+██████████████████ Milestone 3 of 3
 
 ✅ Milestone 1 — Certificate parsing (PEM, fingerprints, expiry, hostname, chain, pin)
 ✅ Milestone 2 — Flask API + policy findings engine
-⬜ Milestone 3 — React watchlist UI
+✅ Milestone 3 — React watchlist UI + Docker Compose
 ```
 
 ## Status
 
-**Milestones 1 & 2 — done.**
+**All three milestones implemented.**
 
 `backend/certs/` parses PEM certificates, computes fingerprints and SPKI hashes, checks
 expiry against an injectable reference clock, matches hostnames (wildcard-aware), links
 issuer/subject chains, and compares SPKI pins. `backend/certs/policy.py` turns those
 normalized records into policy findings with severity (critical/warning), and
 `backend/app.py` + `backend/api/routes.py` serve everything over a Flask REST API,
-parsing fixtures once at startup and caching the results in memory.
+parsing fixtures once at startup and caching the results in memory. `frontend/` is a
+Vite + React dashboard (domain watchlist with search/severity filters, a critical
+findings banner, and a certificate detail view) that talks to that API. `docker-compose.yml`
+brings both services up with one command.
 
 For local development and testing, the project includes a deterministic fixture
 generator (`backend/fixtures/generate_fixtures.py`) that produces representative
@@ -38,7 +42,14 @@ certificate scenarios — valid, expired, expiring-soon, hostname mismatch, wild
 match, broken chain, pin mismatch, malformed entry, and self-signed-root-only chain —
 until the provided assessment fixtures are available.
 
-Milestone 3 (React watchlist UI) is not started yet.
+**Note on the Playwright suite:** `frontend/e2e/watchlist.spec.ts` is written to cover
+all three Milestone 3 UI acceptance criteria (domain filter narrows the list, critical
+findings are visually highlighted, the detail view shows correct certificate fields) and
+is wired into `playwright.config.ts` to boot both the Flask backend and the built
+frontend automatically. It has **not** been executed in this environment — the sandbox
+used to build this had no `sudo` access to install Chromium's system dependencies, so
+the browser binary couldn't be installed here. Run `npx playwright install --with-deps`
+once, then `npm run test:e2e`, on a normal machine or in CI to execute it.
 
 ## Features
 
@@ -63,33 +74,56 @@ Milestone 3 (React watchlist UI) is not started yet.
 - Fixtures parsed once at startup and cached in memory; load failures surface as a
   consistent 500 rather than crashing the app
 
+**Milestone 3 — React dashboard + Docker**
+- Domain watchlist with live search and a severity filter (critical / warning / OK)
+- Findings banner highlighting critical issues, with an explicit "all clear" state
+- Certificate detail view, switchable across every certificate in a domain's chain
+  (leaf / intermediate / root)
+- `docker-compose.yml`: two services (`backend`, `frontend`), fixtures mounted
+  read-only, backend healthcheck via `/healthz`, all config via environment variables
+
 **Testing**
-- 75 automated tests (unit + API contract), 99% coverage across `certs/`, `api/`,
-  `app.py`, `config.py`
-- Clean under ruff, black, and mypy
+- 75 backend tests (unit + API contract), 99% coverage across `certs/`, `api/`,
+  `app.py`, `config.py`, clean under ruff/black/mypy
+- Playwright e2e suite written for all 3 UI acceptance criteria (not yet run — see note above)
 
 ## Repository layout
 
 ```
 ct-watch-console/
 ├── README.md
-└── backend/
-    ├── app.py             # Flask application factory
-    ├── config.py           # env-driven configuration
-    ├── api/
-    │   └── routes.py         # /api/domains, /certificates, /findings, error shapes
-    ├── certs/
-    │   ├── models.py          # CertificateRecord, PolicyFinding, enums
-    │   ├── parser.py           # PEM parsing, fingerprints, SPKI, expiry, CA detection
-    │   ├── hostname.py          # wildcard-aware SAN/CN matching
-    │   ├── chain.py              # issuer/subject chain linking
-    │   ├── pin.py                 # SPKI pin comparison
-    │   ├── policy.py               # findings engine + severity mapping
-    │   └── normalize.py             # orchestrates the above into records
-    ├── fixtures/              # generate_fixtures.py + generated sample_fixtures.json
-    ├── tests/                  # pytest suite (unit + API contract)
-    ├── requirements.txt
-    └── pyproject.toml           # pytest / ruff / black / mypy config
+├── docker-compose.yml
+├── docker/
+│   ├── backend.Dockerfile
+│   └── frontend.Dockerfile
+├── backend/
+│   ├── app.py             # Flask application factory
+│   ├── config.py           # env-driven configuration
+│   ├── api/
+│   │   └── routes.py         # /api/domains, /certificates, /findings, error shapes
+│   ├── certs/
+│   │   ├── models.py          # CertificateRecord, PolicyFinding, enums
+│   │   ├── parser.py           # PEM parsing, fingerprints, SPKI, expiry, CA detection
+│   │   ├── hostname.py          # wildcard-aware SAN/CN matching
+│   │   ├── chain.py              # issuer/subject chain linking
+│   │   ├── pin.py                 # SPKI pin comparison
+│   │   ├── policy.py               # findings engine + severity mapping
+│   │   └── normalize.py             # orchestrates the above into records
+│   ├── fixtures/              # generate_fixtures.py + generated sample_fixtures.json
+│   ├── tests/                  # pytest suite (unit + API contract)
+│   ├── requirements.txt         # runtime deps only
+│   ├── requirements-dev.txt      # + pytest/ruff/black/mypy
+│   └── pyproject.toml             # pytest / ruff / black / mypy config
+└── frontend/
+    ├── src/
+    │   ├── App.jsx              # top-level layout + data fetching
+    │   ├── api.js                 # Flask API client
+    │   └── components/
+    │       ├── DomainList.jsx       # search + severity filter
+    │       ├── FindingsBanner.jsx    # critical findings highlight
+    │       └── CertificateDetail.jsx  # per-certificate field view
+    ├── e2e/watchlist.spec.ts      # Playwright
+    └── playwright.config.ts
 ```
 
 ## Architecture
@@ -107,22 +141,42 @@ Policy Engine        (done — Milestone 2)
 Flask REST API        (done — Milestone 2)
         │
         ▼
-React Dashboard        (Milestone 3)
+React Dashboard        (done — Milestone 3)
 ```
 
-## Backend setup
+## Run everything with Docker Compose
+
+```bash
+docker compose up --build
+```
+
+Backend: http://localhost:5000 · Frontend: http://localhost:8080
+
+## Backend setup (without Docker)
 
 ```bash
 cd backend
-pip install -r requirements.txt
+pip install -r requirements-dev.txt
 python fixtures/generate_fixtures.py   # regenerate fixtures if needed
 pytest --cov=certs --cov=api --cov=app --cov=config --cov-report=term-missing
 ruff check .
 black --check .
 mypy certs app.py config.py api
 
-# run the API locally
 python app.py   # serves on http://0.0.0.0:5000
 ```
 
 All 75 tests pass with 99% coverage across `certs/`, `api/`, `app.py`, and `config.py`.
+
+## Frontend setup (without Docker)
+
+```bash
+cd frontend
+npm install
+npm run dev       # http://localhost:5173, talks to the backend on :5000
+npm run build     # production build to dist/
+
+# e2e (requires the backend's dependencies installed too, and a one-time
+# `npx playwright install --with-deps` on a machine that allows it):
+npm run test:e2e
+```
